@@ -14,6 +14,11 @@ export function cleanHandle(handle: string): string {
   return handle.replace(/^[@$]/, '').trim();
 }
 
+export function venmoTag(handle?: string): string | undefined {
+  const id = cleanHandle(handle ?? '');
+  return id ? `@${id}` : undefined;
+}
+
 export function paymentUrl(
   route: PaymentRoute,
   handle: string,

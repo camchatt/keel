@@ -17,10 +17,11 @@ export function AppShell({ children, style, ...props }: ViewProps) {
             backgroundColor: colors.background,
             maxWidth: Platform.OS === 'web' ? layout.maxWidth : undefined,
             alignSelf: 'center',
-            borderRadius: framed ? radius.lg + 6 : 0,
-            marginVertical: framed ? 24 : 0,
-            maxHeight: framed ? '94%' : '100%',
-            boxShadow: framed ? '0 28px 80px rgba(0, 0, 0, 0.38)' : undefined,
+            borderRadius: framed ? radius.lg : 0,
+            marginVertical: framed ? 16 : 0,
+            maxHeight: framed ? '96%' : '100%',
+            overflow: framed ? 'hidden' : 'visible',
+            boxShadow: framed ? '0 16px 48px rgba(0, 0, 0, 0.28)' : undefined,
           },
           style,
         ]}>
@@ -38,6 +39,5 @@ const styles = StyleSheet.create({
   frame: {
     flex: 1,
     width: '100%',
-    overflow: 'hidden',
   },
 });

@@ -15,9 +15,9 @@ export function Screen({ children, scroll = true }: Props) {
   const { colors } = useResolvedTheme();
   const padding = {
     paddingTop: Math.max(insets.top, space.lg),
-    paddingLeft: space.xl,
-    paddingRight: space.xl,
-    paddingBottom: space.xxl,
+    paddingLeft: Math.max(insets.left, space.lg),
+    paddingRight: Math.max(insets.right, space.lg),
+    paddingBottom: space.xl,
   };
 
   if (!scroll) {

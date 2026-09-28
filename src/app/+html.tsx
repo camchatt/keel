@@ -8,8 +8,8 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta name="theme-color" content="#F3EBDC" />
-        <title>Keel — Circles, home, finance</title>
+        <meta name="theme-color" content="#F6F4F0" />
+        <title>Keel</title>
         <ScrollViewStyleReset />
         <style dangerouslySetInnerHTML={{ __html: responsiveBackground }} />
       </head>

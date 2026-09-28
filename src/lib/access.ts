@@ -92,6 +92,26 @@ export function emptyDetails(): ShareDetails {
   return { login: '', password: '', extra: '' };
 }
 
+export type AccessEntry = {
+  key: string;
+  team: Team;
+  item: CircleItem;
+};
+
+export function accessEntries(teams: Team[]): AccessEntry[] {
+  return teams
+    .flatMap((team) =>
+      circleItems(team)
+        .filter((item) => item.kind === 'service')
+        .map((item) => ({
+          key: `${team.id}:${item.id}`,
+          team,
+          item,
+        })),
+    )
+    .sort((a, b) => a.item.name.localeCompare(b.item.name) || a.team.name.localeCompare(b.team.name));
+}
+
 export function peopleLine(team: Team): string {
   const count = team.members.length;
   const people = count === 0 ? 'Just you' : `${count + 1} people`;

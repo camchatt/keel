@@ -7,9 +7,10 @@ import { ServiceMark } from '@/components/teams/ServiceMark';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
-import { SERVICES, SERVICE_CATEGORY_HINT, SERVICE_CATEGORY_LABEL, SERVICE_CATEGORY_ORDER } from '@/data/services';
+import { SERVICES, SERVICE_CATEGORY_LABEL, SERVICE_CATEGORY_ORDER } from '@/data/services';
 import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { tapLight } from '@/lib/haptics';
+import { buyTag } from '@/lib/buying';
 import { createId } from '@/lib/id';
 import { radius, space } from '@/theme';
 import type { DiscountCode } from '@/types';
@@ -71,13 +72,7 @@ export function ServicesView({
   return (
     <View style={[styles.screen, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, space.lg) }]}>
       <View style={styles.top}>
-        <AppText variant="overline" tone="accent">
-          Step 2
-        </AppText>
         <AppText variant="display">Services</AppText>
-        <AppText variant="body" tone="muted">
-          Everything this circle is subscribed to. Tap to add or drop.
-        </AppText>
       </View>
       <ScrollView
         contentContainerStyle={styles.listWrap}
@@ -88,14 +83,10 @@ export function ServicesView({
             <AppText variant="overline" tone="muted">
               {SERVICE_CATEGORY_LABEL[group.category]}
             </AppText>
-            {SERVICE_CATEGORY_HINT[group.category] ? (
-              <AppText variant="caption" tone="muted">
-                {SERVICE_CATEGORY_HINT[group.category]}
-              </AppText>
-            ) : null}
             <View style={styles.list}>
               {group.items.map((service) => {
                 const active = picked.includes(service.id);
+                const tag = buyTag(service.id);
                 return (
                   <Pressable
                     key={service.id}
@@ -111,9 +102,16 @@ export function ServicesView({
                       },
                     ]}>
                     <ServiceMark service={service} size={36} round />
-                    <AppText variant="bodyBold" numberOfLines={1} style={styles.rowName}>
-                      {service.name}
-                    </AppText>
+                    <View style={styles.rowCopy}>
+                      <AppText variant="bodyBold" numberOfLines={1}>
+                        {service.name}
+                      </AppText>
+                      {tag ? (
+                        <AppText variant="caption" tone="muted" numberOfLines={1}>
+                          {tag}
+                        </AppText>
+                      ) : null}
+                    </View>
                     {active ? (
                       <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
                     ) : (
@@ -127,10 +125,7 @@ export function ServicesView({
         ))}
         <View style={styles.group}>
           <AppText variant="overline" tone="muted">
-            Discount codes
-          </AppText>
-          <AppText variant="caption" tone="muted">
-            Startup rates, employee deals, tech credits — place and the string.
+            Codes
           </AppText>
           {codes.map((item) => (
             <View key={item.id} style={styles.codeRow}>
@@ -189,11 +184,11 @@ export function ServicesView({
           },
         ]}>
         <AppText variant="caption" tone="muted">
-          {count === 0 ? 'You can skip this and add services later.' : `${count} subscribed`}
+          {count === 0 ? 'Optional' : `${count}`}
         </AppText>
         <View style={styles.footerRow}>
           <Button label="Back" variant="ghost" onPress={onBack} style={styles.footerBtn} />
-          <Button label={count === 0 ? 'Skip for now' : 'Save'} onPress={save} style={styles.footerBtn} />
+          <Button label={count === 0 ? 'Skip' : 'Save'} onPress={save} style={styles.footerBtn} />
         </View>
       </View>
     </View>
@@ -233,6 +228,11 @@ const styles = StyleSheet.create({
   rowName: {
     flex: 1,
     minWidth: 0,
+  },
+  rowCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
   },
   codeRow: {
     flexDirection: 'row',

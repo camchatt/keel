@@ -1,13 +1,8 @@
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
-  AtkinsonHyperlegible_400Regular,
-  AtkinsonHyperlegible_700Bold,
-} from '@expo-google-fonts/atkinson-hyperlegible';
-import {
-  Fraunces_400Regular_Italic,
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-} from '@expo-google-fonts/fraunces';
+  Roboto_400Regular,
+  Roboto_500Medium,
+  Roboto_700Bold,
+} from '@expo-google-fonts/roboto';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -15,6 +10,7 @@ import * as SystemUI from 'expo-system-ui';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { AppShell } from '@/components/layout/AppShell';
@@ -32,12 +28,9 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
-    AtkinsonHyperlegible_400Regular,
-    AtkinsonHyperlegible_700Bold,
-    Fraunces_400Regular_Italic,
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
+    Roboto_400Regular,
+    Roboto_500Medium,
+    Roboto_700Bold,
   });
 
   useEffect(() => {

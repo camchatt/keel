@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
 import { catalogMonthly } from '@/data/services';
-import { nextRequestAt } from '@/lib/split';
 import { useKeel } from '@/store/keel-store';
 import type { Team } from '@/types';
 
@@ -15,7 +14,7 @@ function isArmed(team: Team): boolean {
 }
 
 export function useAutoSplitRequests() {
-  const { state, hydrated, setSplitAt } = useKeel();
+  const { state, hydrated, fireSplitAt } = useKeel();
   const busy = useRef(false);
 
   const run = useCallback(() => {
@@ -24,12 +23,9 @@ export function useAutoSplitRequests() {
     if (!due) return;
 
     busy.current = true;
-    setSplitAt(due.gridX, due.gridY, {
-      ...due.split,
-      nextAt: nextRequestAt(new Date(), due.split.interval).toISOString(),
-    });
+    fireSplitAt(due.gridX, due.gridY);
     busy.current = false;
-  }, [hydrated, setSplitAt, state.teams]);
+  }, [fireSplitAt, hydrated, state.teams]);
 
   useEffect(() => {
     run();

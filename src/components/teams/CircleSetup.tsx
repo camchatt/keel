@@ -96,13 +96,7 @@ export function CircleSetup({ open, team, onClose, onSaveGroup, onSaveServices, 
         {step === 'group' ? (
           <>
             <View style={styles.top}>
-              <AppText variant="overline" tone="accent">
-                Step 1
-              </AppText>
-              <AppText variant="display">The group</AppText>
-              <AppText variant="body" tone="muted">
-                Name the circle and say what it is for. Services and shared sources come next, if you want them.
-              </AppText>
+              <AppText variant="display">Circle</AppText>
             </View>
             <ScrollView
               contentContainerStyle={styles.body}
@@ -158,37 +152,28 @@ export function CircleSetup({ open, team, onClose, onSaveGroup, onSaveServices, 
         ) : (
           <>
             <View style={styles.top}>
-              <AppText variant="overline" tone="accent">
-                This circle
-              </AppText>
-              <AppText variant="display">{name.trim() || team?.name.trim() || 'Untitled'}</AppText>
-              <AppText variant="body" tone="muted">
-                {description.trim() || team?.description.trim() || 'Add services or shared sources now, or come back later.'}
-              </AppText>
+              <AppText variant="display">{name.trim() || team?.name.trim() || 'Circle'}</AppText>
             </View>
             <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
               <HubCard
-                kicker="The group"
-                title={name.trim() || 'Name this circle'}
-                detail={description.trim() || 'Add a description'}
+                title="Name"
+                detail={name.trim() || 'Untitled'}
                 onPress={() => {
                   tapLight();
                   setStep('group');
                 }}
               />
               <HubCard
-                kicker="Services"
-                title={serviceCount ? `${serviceCount} selected` : 'Add later'}
-                detail="Logins, seats, leagues, and codes."
+                title="Services"
+                detail={serviceCount ? `${serviceCount}` : 'None'}
                 onPress={() => {
                   tapLight();
                   setStep('services');
                 }}
               />
               <HubCard
-                kicker="Shared sources"
-                title={sourceCount ? `${sourceCount} selected` : 'Add later'}
-                detail="GitHub, Drive, Asana, Figma, and the rest."
+                title="Sources"
+                detail={sourceCount ? `${sourceCount}` : 'None'}
                 onPress={() => {
                   tapLight();
                   setStep('sources');
@@ -217,12 +202,10 @@ export function CircleSetup({ open, team, onClose, onSaveGroup, onSaveServices, 
 }
 
 function HubCard({
-  kicker,
   title,
   detail,
   onPress,
 }: {
-  kicker: string;
   title: string;
   detail: string;
   onPress: () => void;
@@ -234,10 +217,7 @@ function HubCard({
       accessibilityRole="button"
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line }]}>
       <View style={styles.cardCopy}>
-        <AppText variant="overline" tone="accent">
-          {kicker}
-        </AppText>
-        <AppText variant="title">{title}</AppText>
+        <AppText variant="bodyBold">{title}</AppText>
         <AppText variant="caption" tone="muted">
           {detail}
         </AppText>

@@ -19,9 +19,11 @@ type Props = {
   onAdd: () => void;
   onFocus: () => void;
   onRename: (name: string) => void;
-  onRemoveMember: (personId: string) => void;
+  onPressPerson: (personId: string) => void;
   onOpenServices: () => void;
   onOpenSplit: () => void;
+  onOpenBooks: () => void;
+  booksLive?: boolean;
   onOpenChat: () => void;
   onCycle: (direction: -1 | 1) => void;
 };
@@ -34,10 +36,12 @@ export function TeamNode({
   onAdd,
   onFocus,
   onRename,
-  onRemoveMember,
+  onPressPerson,
   chatOpen = false,
   onOpenServices,
   onOpenSplit,
+  onOpenBooks,
+  booksLive = false,
   onOpenChat,
   onCycle,
 }: Props) {
@@ -135,11 +139,12 @@ export function TeamNode({
                   position: 'absolute',
                   left: circle / 2 + Math.cos(angle) * orbit - bubble / 2,
                   top: circle / 2 + Math.sin(angle) * orbit - bubble / 2,
+                  zIndex: 3,
                 }}>
                 <AvatarBubble
                   person={person}
                   size={bubble}
-                  onLongPress={overview ? undefined : () => onRemoveMember(person.id)}
+                  onPress={overview ? undefined : () => onPressPerson(person.id)}
                 />
               </View>
             );
@@ -213,20 +218,30 @@ export function TeamNode({
           )}
         </Pressable>
         {!overview ? (
-          <Pressable
-            onPress={onOpenChat}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={chatOpen ? 'Show circle details' : 'Open group chat'}
-            style={styles.settings}>
-            <Ionicons
-              name={chatOpen ? 'chatbubble' : 'chatbubble-outline'}
-              size={16}
-              color={chatOpen ? colors.accent : colors.muted}
-            />
-          </Pressable>
+          <View style={styles.under}>
+            <Pressable
+              onPress={onOpenChat}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={chatOpen ? 'Show circle details' : 'Open group chat'}
+              style={styles.settings}>
+              <Ionicons
+                name={chatOpen ? 'chatbubble' : 'chatbubble-outline'}
+                size={16}
+                color={chatOpen ? colors.accent : colors.muted}
+              />
+            </Pressable>
+            <Pressable
+              onPress={onOpenBooks}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Open buying power"
+              style={styles.settings}>
+              <Ionicons name="wallet-outline" size={16} color={booksLive ? colors.accent : colors.muted} />
+            </Pressable>
+          </View>
         ) : (
-          <View style={styles.settings} />
+          <View style={styles.under} />
         )}
         </View>
         {showChevrons ? (
@@ -275,7 +290,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   plusMark: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.bodyBold,
   },
   chevron: {
     width: 32,
@@ -284,9 +299,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   chevronMark: {
-    fontFamily: fonts.display,
-    fontSize: 30,
-    lineHeight: 34,
+    fontFamily: fonts.body,
+    fontSize: 28,
+    lineHeight: 32,
   },
   label: {
     flex: 1,
@@ -313,6 +328,13 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     height: 22,
     textAlign: 'center',
+  },
+  under: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    minHeight: 28,
   },
   settings: {
     width: 28,

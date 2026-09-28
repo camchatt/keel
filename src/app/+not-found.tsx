@@ -10,13 +10,10 @@ export default function NotFoundScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <Screen>
-        <AppText variant="overline" tone="accent">
-          Off course
-        </AppText>
-        <AppText variant="display">This page drifted.</AppText>
+        <AppText variant="display">Not found</AppText>
         <Link href="/" style={styles.link}>
           <AppText variant="bodyBold" tone="action">
-            Return to circles
+            Circles
           </AppText>
         </Link>
       </Screen>

@@ -105,13 +105,13 @@ export function ServiceDetails({
     return (
       <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.line }]}>
         <AppText variant="overline" tone="accent">
-          The group
+          Circle
         </AppText>
         <AppText variant="title" numberOfLines={1}>
-          {note ? 'This circle' : 'No shares yet'}
+          {note ? 'Circle' : 'Empty'}
         </AppText>
-        <AppText variant="body" tone="muted" numberOfLines={2}>
-          {note || 'Tap + to name this group. Services and shared sources can wait.'}
+        <AppText variant="caption" tone="muted" numberOfLines={2}>
+          {note || 'Tap + to start'}
         </AppText>
       </View>
     );
@@ -174,7 +174,7 @@ function CredBlock({ item, team }: { item: CircleItem; team?: Team }) {
   if (rows.length === 0) {
     return (
       <AppText variant="caption" tone="muted">
-        No login yet. Open split to add it.
+        No login
       </AppText>
     );
   }
@@ -200,6 +200,7 @@ function ShareRow({ item, team }: { item: CircleItem; team?: Team }) {
   const parts = credParts(item, team);
   const line = [parts.login, parts.secret, parts.extra].filter(Boolean).join(' · ');
   const face = item.kind === 'service' ? item.service : item.kind === 'source' ? item.source : undefined;
+  const caption = line || shareKindLabel(item);
 
   return (
     <View style={styles.shareRow}>
@@ -213,7 +214,7 @@ function ShareRow({ item, team }: { item: CircleItem; team?: Team }) {
           {item.name}
         </AppText>
         <AppText variant="caption" tone={line ? 'default' : 'muted'} numberOfLines={1} style={styles.credValue}>
-          {line || `${shareKindLabel(item)} · no login yet`}
+          {caption}
         </AppText>
       </View>
     </View>

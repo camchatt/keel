@@ -10,20 +10,23 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AddPersonSheet } from '@/components/teams/AddPersonSheet';
+import { CircleBooksSheet } from '@/components/teams/CircleBooksSheet';
 import { CircleChat } from '@/components/teams/CircleChat';
 import { CircleSetup } from '@/components/teams/CircleSetup';
+import { PersonCard } from '@/components/teams/PersonCard';
 import { ServiceDetails } from '@/components/teams/ServiceDetails';
 import { SplitSheet } from '@/components/teams/SplitSheet';
 import { TeamNode } from '@/components/teams/TeamNode';
 import { AppText } from '@/components/ui/AppText';
-import { ALL_SERVICES_ID, getService, getServices } from '@/data/services';
+import { ALL_SERVICES_ID, catalogMonthly, getService, getServices } from '@/data/services';
 import { getSource, getSources } from '@/data/sources';
 import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { circleIsDefined, circleItems, circleSlides } from '@/lib/circle';
 import { tapLight } from '@/lib/haptics';
 import { cellKey, visibleCells } from '@/lib/grid';
+import { shareAmount } from '@/lib/split';
 import { useKeel } from '@/store/keel-store';
-import { layout, space } from '@/theme';
+import { layout, radius, space } from '@/theme';
 
 const MIN_SCALE = 0.28;
 const MAX_SCALE = 1.15;
@@ -44,12 +47,14 @@ export function TeamCanvas() {
     addMemberAt,
     renameTeamAt,
     removeMember,
+    patchMember,
     markHintSeen,
     setGroupAt,
     setServicesAt,
     setSourcesAt,
     setDiscountCodesAt,
     setSplitAt,
+    setBooksAt,
     setDetailsAt,
     addMessageAt,
   } = useKeel();
@@ -62,6 +67,8 @@ export function TeamCanvas() {
   const [sheet, setSheet] = useState<{ x: number; y: number } | null>(null);
   const [servicesPicker, setServicesPicker] = useState<{ x: number; y: number } | null>(null);
   const [splitOpen, setSplitOpen] = useState<{ x: number; y: number } | null>(null);
+  const [booksOpen, setBooksOpen] = useState<{ x: number; y: number } | null>(null);
+  const [personOpen, setPersonOpen] = useState<{ x: number; y: number; personId: string } | null>(null);
   const [chatByCell, setChatByCell] = useState<Record<string, boolean>>({});
   const hasCentered = useRef(false);
   const wheelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -211,6 +218,13 @@ export function TeamCanvas() {
   const splitTeam = splitOpen
     ? state.teams.find((team) => team.gridX === splitOpen.x && team.gridY === splitOpen.y)
     : undefined;
+  const booksTeam = booksOpen
+    ? state.teams.find((team) => team.gridX === booksOpen.x && team.gridY === booksOpen.y)
+    : undefined;
+  const personTeam = personOpen
+    ? state.teams.find((team) => team.gridX === personOpen.x && team.gridY === personOpen.y)
+    : undefined;
+  const activePerson = personTeam?.members.find((item) => item.id === personOpen?.personId);
 
   const cycleService = (x: number, y: number, direction: -1 | 1) => {
     const team = state.teams.find((item) => item.gridX === x && item.gridY === y);
@@ -263,6 +277,11 @@ export function TeamCanvas() {
                   chatOpen={Boolean(chatByCell[cell.key])}
                   onOpenServices={() => setServicesPicker({ x: cell.x, y: cell.y })}
                   onOpenSplit={() => setSplitOpen({ x: cell.x, y: cell.y })}
+                  onOpenBooks={() => setBooksOpen({ x: cell.x, y: cell.y })}
+                  booksLive={
+                    (cell.team?.books.funds.length ?? 0) + (cell.team?.books.borrow.length ?? 0) > 0 ||
+                    cell.team?.split.mode === 'equal'
+                  }
                   onOpenChat={() => {
                     tapLight();
                     setChatByCell((prev) => ({ ...prev, [cell.key]: !prev[cell.key] }));
@@ -270,16 +289,9 @@ export function TeamCanvas() {
                   onCycle={(direction) => cycleService(cell.x, cell.y, direction)}
                   onFocus={() => focusCell(cell.x, cell.y)}
                   onRename={(name) => renameTeamAt(cell.x, cell.y, name)}
-                  onRemoveMember={(personId) => {
-                    if (!cell.team) return;
-                    Alert.alert('Remove from circle?', 'They can be added again later.', [
-                      { text: 'Keep', style: 'cancel' },
-                      {
-                        text: 'Remove',
-                        style: 'destructive',
-                        onPress: () => removeMember(cell.team!.id, personId),
-                      },
-                    ]);
+                  onPressPerson={(personId) => {
+                    tapLight();
+                    setPersonOpen({ x: cell.x, y: cell.y, personId });
                   }}
                 />
               </View>
@@ -287,10 +299,17 @@ export function TeamCanvas() {
           </Animated.View>
         </Animated.View>
       </GestureDetector>
-      <View style={[styles.hud, { paddingTop: Math.max(insets.top, space.lg), pointerEvents: 'box-none' }]}>
-        <AppText variant="overline" tone="accent">
-          Circles
-        </AppText>
+      <View
+        style={[
+          styles.hud,
+          {
+            paddingTop: Math.max(insets.top, space.md),
+            left: Math.max(insets.left, space.md),
+            right: Math.max(insets.right, space.md),
+            pointerEvents: 'box-none',
+          },
+        ]}>
+        <View />
         <Pressable
           onPress={toggleZoom}
           accessibilityRole="button"
@@ -356,38 +375,68 @@ export function TeamCanvas() {
       <SplitSheet
         open={splitOpen !== null}
         team={splitTeam}
-        activeServiceId={combined ? undefined : activeId}
         onClose={() => setSplitOpen(null)}
         onChange={(split) => {
           if (!splitOpen) return;
           setSplitAt(splitOpen.x, splitOpen.y, split);
         }}
-        onRemoveService={(itemId) => {
-          if (!splitOpen || !splitTeam) return;
-          const nextServices = splitTeam.serviceIds.filter((id) => id !== itemId);
-          const nextCodes = splitTeam.discountCodes.filter((item) => item.id !== itemId);
-          const nextSources = (splitTeam.sourceIds ?? []).filter((id) => id !== itemId);
-          setServicesAt(splitOpen.x, splitOpen.y, nextServices);
-          setDiscountCodesAt(splitOpen.x, splitOpen.y, nextCodes);
-          setSourcesAt(splitOpen.x, splitOpen.y, nextSources);
-          const nextCount = nextServices.length + nextCodes.length + nextSources.length;
-          const key = cellKey(splitOpen.x, splitOpen.y);
-          setActiveByCell((prev) => ({
-            ...prev,
-            [key]: nextCount > 1 ? ALL_SERVICES_ID : nextServices[0] ?? nextSources[0] ?? nextCodes[0]?.id,
-          }));
+        onChangeVenmo={(personId, handle) => {
+          if (!splitTeam) return;
+          patchMember(splitTeam.id, personId, { venmo: handle });
         }}
-        onChangeDetails={(itemId, details) => {
-          if (!splitOpen) return;
-          setDetailsAt(splitOpen.x, splitOpen.y, itemId, details);
+      />
+      <CircleBooksSheet
+        open={booksOpen !== null}
+        team={booksTeam}
+        onClose={() => setBooksOpen(null)}
+        onChangeBooks={(books) => {
+          if (!booksOpen) return;
+          setBooksAt(booksOpen.x, booksOpen.y, books);
         }}
-        onChangeDiscount={(discount) => {
-          if (!splitOpen || !splitTeam) return;
-          setDiscountCodesAt(
-            splitOpen.x,
-            splitOpen.y,
-            splitTeam.discountCodes.map((item) => (item.id === discount.id ? discount : item)),
-          );
+        onOpenSplit={() => {
+          if (!booksOpen) return;
+          const at = booksOpen;
+          setBooksOpen(null);
+          setSplitOpen(at);
+        }}
+      />
+      <PersonCard
+        open={personOpen !== null}
+        person={activePerson}
+        splitting={personTeam?.split.mode === 'equal'}
+        share={
+          personTeam
+            ? shareAmount(
+                personTeam.split.total !== undefined
+                  ? personTeam.split.total
+                  : catalogMonthly(personTeam.serviceIds),
+                personTeam.split.ways,
+              )
+            : 0
+        }
+        nextAt={personTeam?.split.nextAt}
+        interval={personTeam?.split.interval}
+        route={personTeam?.split.route}
+        onClose={() => setPersonOpen(null)}
+        onChangeVenmo={(handle) => {
+          if (!personTeam || !activePerson) return;
+          patchMember(personTeam.id, activePerson.id, { venmo: handle });
+        }}
+        onRemove={() => {
+          if (!personTeam || !activePerson) return;
+          const teamId = personTeam.id;
+          const personId = activePerson.id;
+          Alert.alert('Remove from circle?', 'They can be added again later.', [
+            { text: 'Keep', style: 'cancel' },
+            {
+              text: 'Remove',
+              style: 'destructive',
+              onPress: () => {
+                removeMember(teamId, personId);
+                setPersonOpen(null);
+              },
+            },
+          ]);
         }}
       />
     </View>
@@ -433,9 +482,7 @@ function PressableHint({ onDismiss }: { onDismiss: () => void }) {
         accessibilityRole="button"
         accessibilityLabel="Dismiss circles hint"
         style={[styles.hint, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-        <AppText variant="caption">
-          Pinch out to see every circle. Swipe to move. Tap + to name the group. Services and sources can wait.
-        </AppText>
+        <AppText variant="caption">Pinch out for all circles. Tap + to start one.</AppText>
       </Pressable>
     </View>
   );
@@ -465,8 +512,6 @@ const styles = StyleSheet.create({
   },
   hud: {
     position: 'absolute',
-    left: space.xl,
-    right: space.xl,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -486,7 +531,7 @@ const styles = StyleSheet.create({
   },
   hint: {
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: radius.md,
     padding: space.lg,
     overflow: 'hidden',
   },

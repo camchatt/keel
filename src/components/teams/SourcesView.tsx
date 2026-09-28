@@ -41,13 +41,7 @@ export function SourcesView({ selectedIds = [], links = {}, onBack, onSave }: Pr
   return (
     <View style={[styles.screen, { backgroundColor: colors.background, paddingTop: Math.max(insets.top, space.lg) }]}>
       <View style={styles.top}>
-        <AppText variant="overline" tone="accent">
-          Step 2
-        </AppText>
-        <AppText variant="display">Shared sources</AppText>
-        <AppText variant="body" tone="muted">
-          A repo, a Drive folder, an Asana board. Add the link now or come back later.
-        </AppText>
+        <AppText variant="display">Sources</AppText>
       </View>
       <ScrollView
         contentContainerStyle={styles.gridWrap}
@@ -118,12 +112,12 @@ export function SourcesView({ selectedIds = [], links = {}, onBack, onSave }: Pr
           },
         ]}>
         <AppText variant="caption" tone="muted">
-          {count === 0 ? 'You can skip this and add sources later.' : `${count} selected`}
+          {count === 0 ? 'Optional' : `${count}`}
         </AppText>
         <View style={styles.footerRow}>
           <Button label="Back" variant="ghost" onPress={onBack} style={styles.footerBtn} />
           <Button
-            label={count === 0 ? 'Skip for now' : 'Save'}
+            label={count === 0 ? 'Skip' : 'Save'}
             onPress={() =>
               onSave(
                 picked,

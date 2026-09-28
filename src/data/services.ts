@@ -939,10 +939,16 @@ export const SERVICE_CATEGORY_LABEL: Record<ServiceCategory, string> = {
 };
 
 export const SERVICE_CATEGORY_HINT: Partial<Record<ServiceCategory, string>> = {
-  work: 'Coworking, payroll, and the startup credits this circle can draw.',
+  watch: 'One household plan. Extra people drop the share until the screens are full.',
+  listen: 'Family SKUs beat five individual plans.',
+  shop: 'One membership plus household cards. The circle is the extra shopper.',
+  ride: 'Member plus household, not a second membership each.',
+  work: 'Coworking, payroll, and the startup credits this circle can draw. Per-seat tools get pricier with more people.',
   resources: 'Parking, hotels, cars, and roadside.',
-  passes: 'The cards that get this circle through the gate.',
+  passes: 'One pass that covers a vehicle or a family lane.',
   sports: 'Fantasy leagues and the sports channels this circle shares.',
+  perks: 'Club prices and extra cards, not a second fee.',
+  seats: 'Commit the row as one buyer, then split nights.',
 };
 
 export const SERVICE_CATEGORY_ORDER: ServiceCategory[] = [
@@ -1056,6 +1062,10 @@ const MONTHLY: Record<string, number> = {
   'tsa-precheck': 0,
 };
 
+export function serviceMonthly(id: string): number {
+  return MONTHLY[id] ?? 0;
+}
+
 export function catalogMonthly(ids: string[]): number {
-  return ids.reduce((sum, id) => sum + (MONTHLY[id] ?? 0), 0);
+  return ids.reduce((sum, id) => sum + serviceMonthly(id), 0);
 }

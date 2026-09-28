@@ -7,16 +7,17 @@ import type { Person } from '@/types';
 type Props = {
   person: Person;
   size: number;
-  onLongPress?: () => void;
+  onPress?: () => void;
 };
 
-export function AvatarBubble({ person, size, onLongPress }: Props) {
+export function AvatarBubble({ person, size, onPress }: Props) {
   const { colors } = useResolvedTheme();
 
   return (
     <Pressable
-      onLongPress={onLongPress}
-      accessibilityRole="imagebutton"
+      onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole="button"
       accessibilityLabel={person.name}
       style={[
         styles.bubble,

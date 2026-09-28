@@ -36,10 +36,7 @@ export function CircleChat({ title, messages, onSend }: Props) {
   return (
     <View style={[styles.panel, { backgroundColor: colors.surface, borderColor: colors.line }]}>
       <View style={styles.row}>
-        <AppText variant="overline" tone="accent">
-          Chat
-        </AppText>
-        <AppText variant="overline" tone="muted" numberOfLines={1} style={styles.title}>
+        <AppText variant="overline" tone="muted" numberOfLines={1}>
           {title}
         </AppText>
       </View>

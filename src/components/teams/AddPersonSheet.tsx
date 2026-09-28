@@ -76,10 +76,7 @@ export function AddPersonSheet({ open, onClose, onPick }: Props) {
             },
           ]}>
           <View style={[styles.handle, { backgroundColor: colors.line }]} />
-          <AppText variant="overline" tone="accent">
-            Add to this circle
-          </AppText>
-          <AppText variant="title">{mode === 'new' ? 'New person' : 'Who is joining?'}</AppText>
+          <AppText variant="title">{mode === 'new' ? 'New person' : 'Add person'}</AppText>
           {mode === 'choose' ? (
             <View style={styles.actions}>
               <Button label="From contacts" onPress={addFromContacts} />

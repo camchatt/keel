@@ -18,6 +18,27 @@ export type CircleSplit = {
   nextAt?: string;
 };
 
+export type CircleFund = {
+  id: string;
+  name: string;
+  amount: string;
+  target: string;
+  note: string;
+};
+
+export type CircleBorrow = {
+  id: string;
+  name: string;
+  limit: string;
+  used: string;
+  note: string;
+};
+
+export type CircleBooks = {
+  funds: CircleFund[];
+  borrow: CircleBorrow[];
+};
+
 export type Person = {
   id: string;
   name: string;
@@ -25,6 +46,9 @@ export type Person = {
   hue: number;
   source: PersonSource;
   contactId?: string;
+  joinedAt?: string;
+  venmo?: string;
+  paid?: boolean;
 };
 
 export type DiscountCode = {
@@ -63,6 +87,7 @@ export type Team = {
   serviceIds: string[];
   sourceIds: string[];
   split: CircleSplit;
+  books: CircleBooks;
   discountCodes: DiscountCode[];
   detailsById: Record<string, ShareDetails>;
   shareMetaById: Record<string, ShareMeta>;

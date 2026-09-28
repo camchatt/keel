@@ -3,12 +3,15 @@ import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNo
 import { emptyFinance, getCardItem, getCreditItem, getVaultItem, normalizeFinance } from '@/data/finance';
 import { emptyHome, getTradeItem, getUpkeepItem, normalizeHome } from '@/data/home';
 import { sampleJoinedCircles } from '@/data/joined';
+import { emptyBooks, normalizeBooks } from '@/lib/books';
 import { hueFromName, initialsFromName } from '@/lib/grid';
 import { createId } from '@/lib/id';
-import { defaultSplit, normalizeSplit } from '@/lib/split';
+import { defaultSplit, nextRequestAt, normalizeSplit } from '@/lib/split';
+import { cleanHandle, venmoTag } from '@/lib/pay';
 import { loadState, saveState } from '@/lib/storage';
 import type {
   Appearance,
+  CircleBooks,
   CircleMessage,
   CircleSplit,
   DiscountCode,
@@ -38,10 +41,20 @@ function emptyTeam(gridX = 0, gridY = 0): Team {
     serviceIds: [],
     sourceIds: [],
     split: defaultSplit(),
+    books: emptyBooks(),
     discountCodes: [],
     detailsById: {},
     shareMetaById: {},
     messages: [],
+  };
+}
+
+function normalizePerson(person: Person): Person {
+  return {
+    ...person,
+    joinedAt: typeof person.joinedAt === 'string' ? person.joinedAt : undefined,
+    venmo: venmoTag(person.venmo)?.slice(1),
+    paid: Boolean(person.paid),
   };
 }
 
@@ -57,7 +70,9 @@ function normalizeTeam(team: Team): Team {
     detailsById: team.detailsById && typeof team.detailsById === 'object' ? team.detailsById : {},
     shareMetaById: team.shareMetaById && typeof team.shareMetaById === 'object' ? team.shareMetaById : {},
     messages: Array.isArray(team.messages) ? team.messages : [],
+    members: Array.isArray(team.members) ? team.members.map(normalizePerson) : [],
     split: normalizeSplit(team.split),
+    books: normalizeBooks(team.books),
   };
 }
 
@@ -84,11 +99,14 @@ type Action =
       contactId?: string;
     }
   | { type: 'REMOVE_MEMBER'; teamId: string; personId: string }
+  | { type: 'PATCH_MEMBER'; teamId: string; personId: string; patch: Partial<Pick<Person, 'venmo' | 'paid'>> }
   | { type: 'SET_SERVICES_AT'; gridX: number; gridY: number; serviceIds: string[] }
   | { type: 'SET_SOURCES_AT'; gridX: number; gridY: number; sourceIds: string[] }
   | { type: 'SET_DISCOUNTS_AT'; gridX: number; gridY: number; discountCodes: DiscountCode[] }
   | { type: 'SET_GROUP_AT'; gridX: number; gridY: number; name: string; description: string }
   | { type: 'SET_SPLIT_AT'; gridX: number; gridY: number; split: CircleSplit }
+  | { type: 'FIRE_SPLIT'; gridX: number; gridY: number }
+  | { type: 'SET_BOOKS_AT'; gridX: number; gridY: number; books: CircleBooks }
   | { type: 'SET_DETAILS_AT'; gridX: number; gridY: number; itemId: string; details: ShareDetails }
   | { type: 'SET_CAPTAIN'; captainName: string }
   | { type: 'SET_APPEARANCE'; appearance: Appearance }
@@ -160,6 +178,8 @@ function reducer(state: KeelState, action: Action): KeelState {
         hue: hueFromName(action.name),
         source: action.source,
         contactId: action.contactId,
+        joinedAt: new Date().toISOString(),
+        paid: false,
       };
       return {
         ...state,
@@ -240,6 +260,36 @@ function reducer(state: KeelState, action: Action): KeelState {
         ),
       };
     }
+    case 'FIRE_SPLIT': {
+      const { teams, team } = upsertTeam(state, action.gridX, action.gridY);
+      return {
+        ...state,
+        teams: teams.map((item) =>
+          item.id === team.id
+            ? {
+                ...item,
+                split: {
+                  ...item.split,
+                  nextAt: nextRequestAt(new Date(), item.split.interval).toISOString(),
+                },
+                members: item.members.map((person) => ({
+                  ...person,
+                  paid: Boolean(cleanHandle(person.venmo ?? '')),
+                })),
+              }
+            : item,
+        ),
+      };
+    }
+    case 'SET_BOOKS_AT': {
+      const { teams, team } = upsertTeam(state, action.gridX, action.gridY);
+      return {
+        ...state,
+        teams: teams.map((item) =>
+          item.id === team.id ? { ...item, books: normalizeBooks(action.books) } : item,
+        ),
+      };
+    }
     case 'SET_DETAILS_AT': {
       const { teams, team } = upsertTeam(state, action.gridX, action.gridY);
       return {
@@ -257,6 +307,29 @@ function reducer(state: KeelState, action: Action): KeelState {
         teams: state.teams.map((team) =>
           team.id === action.teamId
             ? { ...team, members: team.members.filter((person) => person.id !== action.personId) }
+            : team,
+        ),
+      };
+    case 'PATCH_MEMBER':
+      return {
+        ...state,
+        teams: state.teams.map((team) =>
+          team.id === action.teamId
+            ? {
+                ...team,
+                members: team.members.map((person) =>
+                  person.id === action.personId
+                    ? {
+                        ...person,
+                        ...action.patch,
+                        venmo:
+                          action.patch.venmo !== undefined
+                            ? cleanHandle(action.patch.venmo) || undefined
+                            : person.venmo,
+                      }
+                    : person,
+                ),
+              }
             : team,
         ),
       };
@@ -506,8 +579,11 @@ type KeelContextValue = {
   setSourcesAt: (gridX: number, gridY: number, sourceIds: string[]) => void;
   setDiscountCodesAt: (gridX: number, gridY: number, discountCodes: DiscountCode[]) => void;
   setSplitAt: (gridX: number, gridY: number, split: CircleSplit) => void;
+  fireSplitAt: (gridX: number, gridY: number) => void;
+  setBooksAt: (gridX: number, gridY: number, books: CircleBooks) => void;
   setDetailsAt: (gridX: number, gridY: number, itemId: string, details: ShareDetails) => void;
   removeMember: (teamId: string, personId: string) => void;
+  patchMember: (teamId: string, personId: string, patch: Partial<Pick<Person, 'venmo' | 'paid'>>) => void;
   setCaptainName: (captainName: string) => void;
   setAppearance: (appearance: Appearance) => void;
   markHintSeen: () => void;
@@ -563,9 +639,12 @@ export function KeelProvider({ children }: { children: ReactNode }) {
       setDiscountCodesAt: (gridX, gridY, discountCodes) =>
         dispatch({ type: 'SET_DISCOUNTS_AT', gridX, gridY, discountCodes }),
       setSplitAt: (gridX, gridY, split) => dispatch({ type: 'SET_SPLIT_AT', gridX, gridY, split }),
+      fireSplitAt: (gridX, gridY) => dispatch({ type: 'FIRE_SPLIT', gridX, gridY }),
+      setBooksAt: (gridX, gridY, books) => dispatch({ type: 'SET_BOOKS_AT', gridX, gridY, books }),
       setDetailsAt: (gridX, gridY, itemId, details) =>
         dispatch({ type: 'SET_DETAILS_AT', gridX, gridY, itemId, details }),
       removeMember: (teamId, personId) => dispatch({ type: 'REMOVE_MEMBER', teamId, personId }),
+      patchMember: (teamId, personId, patch) => dispatch({ type: 'PATCH_MEMBER', teamId, personId, patch }),
       setCaptainName: (captainName) => dispatch({ type: 'SET_CAPTAIN', captainName }),
       setAppearance: (appearance) => dispatch({ type: 'SET_APPEARANCE', appearance }),
       markHintSeen: () => dispatch({ type: 'SEEN_HINT' }),

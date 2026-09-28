@@ -45,9 +45,7 @@ export function HomeOrbit({ title, center, slots, onPressSlot, onAdd }: Props) {
         const next = event.nativeEvent.layout.width;
         if (next && Math.abs(next - box) > 1) setBox(next);
       }}>
-      <AppText variant="overline" tone="accent">
-        {title}
-      </AppText>
+      <AppText variant="bodyBold">{title}</AppText>
       <View style={[styles.stage, { height: circle + reach * 2 }]}>
         <View
           style={[

@@ -90,7 +90,7 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <Header kicker="Home" title="The house" detail="Trades, town, and what needs a date." />
+      <Header title="Home" />
       <HomeOrbit
         title="House"
         center="house"

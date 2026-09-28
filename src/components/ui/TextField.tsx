@@ -19,7 +19,7 @@ export function TextField({ compact, style, ...props }: Props) {
           color: colors.text,
           backgroundColor: colors.surface,
           borderColor: colors.line,
-          minHeight: compact ? 48 : layout.minTap + 8,
+          minHeight: compact ? 40 : layout.minTap,
         },
         style,
       ]}
@@ -34,6 +34,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: space.lg,
     fontFamily: fonts.body,
-    fontSize: 17,
+    fontSize: 16,
   },
 });

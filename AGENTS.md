@@ -39,3 +39,10 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Cursor Cloud specific instructions
+
+- Install with `npm ci`. This repo has `package-lock.json` and no `bun.lock`.
+- There is no iOS simulator or Android emulator in Cloud Agents. Run the web app with `EXPO_NO_TELEMETRY=1 BROWSER=none npx expo start --web --host localhost`. It serves http://localhost:8081. `--port` does not apply to the web target.
+- `npx tsc --noEmit` typechecks the app. `npx expo lint` runs, and the current tree already reports `react-hooks` findings.
+- Local web development does not need API keys or a `.env` file. Circle and home data stays in AsyncStorage (localStorage on web).
